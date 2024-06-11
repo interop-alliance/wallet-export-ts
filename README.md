@@ -46,7 +46,30 @@ npm install
 
 ## Usage
 
-TBD
+Export an empty wallet.
+
+```ts
+export() // no wallet passed in, generates an empty Universal Wallet Backup TAR file
+```
+
+...
+
+```
+$ tar -vtf wallet-export-2024-01-01.tar
+
+drwxrwxr-x 0 0 4.0K Jun 11 15:38 app/
+drwxrwxr-x 0 0 4.0K Jun 11 15:38 keys/
+-rw-rw-r-- 0 0   1K Jun 11 15:38 manifest.yaml
+
+$ cat manifest.yaml
+---
+ubc-version: 0.1
+meta:
+  created: 2024-01-01
+  createdBy:
+    client:
+      url: https://github.com/interop-alliance/wallet-export-ts
+```
 
 ## Contribute
 
