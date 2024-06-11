@@ -57,9 +57,9 @@ export() // no wallet passed in, generates an empty Universal Wallet Backup TAR 
 ```
 $ tar -vtf wallet-export-2024-01-01.tar
 
-drwxrwxr-x 0 0 4.0K Jun 11 15:38 app/
-drwxrwxr-x 0 0 4.0K Jun 11 15:38 keys/
--rw-rw-r-- 0 0   1K Jun 11 15:38 manifest.yaml
+drwxr-xr-x 0/0               0 2024-06-11 15:58 app
+drwxr-xr-x 0/0               0 2024-06-11 15:58 keys
+-rw-r--r-- 0/0              21 2024-06-11 15:58 manifest.yaml
 
 $ cat manifest.yaml
 ---
