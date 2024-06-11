@@ -1,4 +1,4 @@
-# Example Isomorphic TS/JS Lib Template _(@interop/wallet-export-ts)_
+# Universal Wallet Backup Container Export _(@interop/wallet-export-ts)_
 
 [![Build status](https://img.shields.io/github/actions/workflow/status/interop-alliance/wallet-export-ts/main.yml?branch=main)](https://github.com/interop-alliance/wallet-export-ts/actions?query=workflow%3A%22Node.js+CI%22)
 [![NPM Version](https://img.shields.io/npm/v/@interop/wallet-export-ts.svg)](https://npm.im/@interop/wallet-export-ts)
