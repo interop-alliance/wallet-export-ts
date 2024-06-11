@@ -1,6 +1,6 @@
 {
-  "name": "@interop/isomorphic-lib-template",
-  "description": "A Typescript/Javascript isomorphic library template, for use in the browser, Node.js, and React Native.",
+  "name": "@interop/wallet-export-ts",
+  "description": "A Javascript/Typescript library for exporting Universal Wallet Backup Containers.",
   "version": "0.0.1",
   "scripts": {
     "build": "npm run clear && tsc -p tsconfig.json && ./build-dist.sh",
@@ -101,8 +101,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/interop-alliance/isomorphic-lib-template"
+    "url": "https://github.com/interop-alliance/wallet-export-ts"
   },
-  "homepage": "https://github.com/interop-alliance/isomorphic-lib-template",
-  "bugs": "https://github.com/interop-alliance/isomorphic-lib-template/issues"
+  "homepage": "https://github.com/interop-alliance/wallet-export-ts",
+  "bugs": "https://github.com/interop-alliance/wallet-export-ts/issues"
 }

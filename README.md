@@ -1,9 +1,9 @@
-# Example Isomorphic TS/JS Lib Template _(@interop/isomorphic-lib-template)_
+# Example Isomorphic TS/JS Lib Template _(@interop/wallet-export-ts)_
 
-[![Build status](https://img.shields.io/github/actions/workflow/status/interop-alliance/isomorphic-lib-template/main.yml?branch=main)](https://github.com/interop-alliance/isomorphic-lib-template/actions?query=workflow%3A%22Node.js+CI%22)
-[![NPM Version](https://img.shields.io/npm/v/@interop/isomorphic-lib-template.svg)](https://npm.im/@interop/isomorphic-lib-template)
+[![Build status](https://img.shields.io/github/actions/workflow/status/interop-alliance/wallet-export-ts/main.yml?branch=main)](https://github.com/interop-alliance/wallet-export-ts/actions?query=workflow%3A%22Node.js+CI%22)
+[![NPM Version](https://img.shields.io/npm/v/@interop/wallet-export-ts.svg)](https://npm.im/@interop/wallet-export-ts)
 
-> A Typescript/Javascript isomorphic library template, for use in the browser, Node.js, and React Native.
+> A Javascript/Typescript library for exporting Universal Wallet Backup Containers.
 
 ## Table of Contents
 
@@ -31,7 +31,7 @@ TBD
 To install via NPM:
 
 ```
-npm install @interop/isomorphic-lib-template
+npm install @interop/wallet-export-ts
 ```
 
 ### Development
@@ -39,8 +39,8 @@ npm install @interop/isomorphic-lib-template
 To install locally (for development):
 
 ```
-git clone https://github.com/interop-alliance/isomorphic-lib-template.git
-cd isomorphic-lib-template
+git clone https://github.com/interop-alliance/wallet-export-ts.git
+cd wallet-export-ts
 npm install
 ```
 
@@ -57,4 +57,4 @@ If editing the Readme, please conform to the
 
 ## License
 
-[MIT License](LICENSE.md) © 2021 Interop Alliance and Dmitri Zagidulin.
+[MIT License](LICENSE.md) © 2024 Interop Alliance and Dmitri Zagidulin.
