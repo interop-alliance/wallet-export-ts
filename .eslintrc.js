@@ -10,6 +10,7 @@ module.exports = {
   rules: {
     'prettier/prettier': 'off',
     'arrow-body-style': 'off',
-    'prefer-arrow-callback': 'off'
+    'prefer-arrow-callback': 'off',
+    '@typescript-eslint/strict-boolean-expressions': 'off'
   }
 }

@@ -46,7 +46,7 @@ npm install
 
 ## Usage
 
-Export an empty wallet.
+### Export an empty wallet.
 
 ```ts
 export() // no wallet passed in, generates an empty Universal Wallet Backup TAR file
@@ -70,6 +70,39 @@ meta:
     client:
       url: https://github.com/interop-alliance/wallet-export-ts
 ```
+
+### Export an ActivityPub Actor Profile
+
+```js
+import * as fs from 'node:fs'
+import { exportActorProfile } from '@interop/wallet-export-ts'
+
+const filename = 'out/test-export-2024-01-01.tar'
+const tarball = fs.createWriteStream(filename)
+
+// Each of the arguments passed in is Optional
+const packStream = exportActorProfile({
+  actorProfile, outbox, followers, followingAccounts, lists, bookmarks, likes,
+  blockedAccounts, blockedDomains, mutedAccounts
+})
+
+packStream.pipe(tarball)
+```
+
+then
+
+```
+cd out
+tar -vtf test-export-2024-01-01.tar
+ 
+drwxr-xr-x  0 0      0           0 Oct  9 20:19 activitypub
+-rw-r--r--  0 0      0        3526 Oct  9 20:19 activitypub/actor.json
+-rw-r--r--  0 0      0        4367 Oct  9 20:19 activitypub/outbox.json
+-rw-r--r--  0 0      0         386 Oct  9 20:19 manifest.yaml
+```
+
+see https://codeberg.org/fediverse/fep/src/branch/main/fep/6fcd/fep-6fcd.md#activitypub-export-example 
+for contents
 
 ## Contribute
 
