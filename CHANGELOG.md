@@ -1,7 +1,7 @@
 # wallet-export-ts Changelog
 
-## 1.0.0 - TBD
+## 0.1.0 - 2024-10-10
 
 ### Added
 
-- Initial commit.
+- Initial commit, implement `exportActorProfile()`.
