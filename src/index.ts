@@ -162,7 +162,7 @@ export async function importActorProfile(tarBuffer: Buffer): Promise<any> {
   const result: Record<string, any> = {}
 
   return new Promise((resolve, reject) => {
-    extract.on('entry', async (header, stream, next) => {
+    extract.on('entry', (header, stream, next) => {
       let content = ''
 
       stream.on('data', (chunk) => {
@@ -197,10 +197,10 @@ export async function importActorProfile(tarBuffer: Buffer): Promise<any> {
         next() // Process the next file in the tar archive
       })
 
-      stream.on('error', (error) => reject(error))
+      stream.on('error', (error) => { reject(error); })
     })
 
-    extract.on('finish', () => resolve(result))
+    extract.on('finish', () => { resolve(result); })
 
     // Stream the buffer data into the tar extractor
     const stream = Readable.from(tarBuffer)
