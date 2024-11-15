@@ -6,7 +6,7 @@ import { type Pack } from 'tar-stream'
 import YAML from 'yaml'
 import { Readable } from 'stream'
 
-export type ActorProfileOptions = {
+export interface ActorProfileOptions {
   actorProfile?: any
   outbox?: any
   followers?: any
@@ -113,14 +113,12 @@ export function exportActorProfile({
   }
 
   if (followingAccounts) {
-    // CSV headers:
-    // Account address, Show boosts, Notify on new posts, Languages
-    manifest.contents.activitypub.contents['following_accounts.csv'] = {
+    manifest.contents.activitypub.contents['following.json'] = {
       url: 'https://docs.joinmastodon.org/user/moving/#export'
     }
     pack.entry(
-      { name: 'activitypub/following_accounts.csv' },
-      followingAccounts
+      { name: 'activitypub/following.json' },
+      JSON.stringify(followers, null, 2)
     )
   }
 
@@ -161,48 +159,51 @@ export async function importActorProfile(tarBuffer: Buffer): Promise<any> {
   const extract = tar.extract()
   const result: Record<string, any> = {}
 
-  return new Promise((resolve, reject) => {
+  return await new Promise((resolve, reject) => {
     extract.on('entry', (header, stream, next) => {
       let content = ''
+      console.log(`Extracting file: ${header.name}`)
 
       stream.on('data', (chunk) => {
         content += chunk.toString()
       })
 
       stream.on('end', () => {
-        // Handle JSON files
-        if (header.name.endsWith('.json')) {
-          try {
+        try {
+          if (header.name.endsWith('.json')) {
             result[header.name] = JSON.parse(content)
-          } catch (error) {
-            console.error(`Error parsing JSON from ${header.name}:`, error)
-          }
-        }
-        // Handle YAML files
-        else if (
-          header.name.endsWith('.yaml') ||
-          header.name.endsWith('.yml')
-        ) {
-          try {
+          } else if (
+            header.name.endsWith('.yaml') ||
+            header.name.endsWith('.yml')
+          ) {
             result[header.name] = YAML.parse(content)
-          } catch (error) {
-            console.error(`Error parsing YAML from ${header.name}:`, error)
+          } else if (header.name.endsWith('.csv')) {
+            result[header.name] = content
           }
+          console.log(`Successfully parsed: ${header.name}`)
+        } catch (error) {
+          console.error(`Error processing file ${header.name}:`, error)
+          reject(error)
         }
-        // Handle CSV files
-        else if (header.name.endsWith('.csv')) {
-          result[header.name] = content // Return raw CSV as a string or implement CSV parsing here if needed
-        }
-
-        next() // Process the next file in the tar archive
+        next()
       })
 
-      stream.on('error', (error) => { reject(error); })
+      stream.on('error', (error) => {
+        console.error(`Stream error on file ${header.name}:`, error)
+        reject(error)
+      })
     })
 
-    extract.on('finish', () => { resolve(result); })
+    extract.on('finish', () => {
+      console.log('Extraction complete', result)
+      resolve(result)
+    })
 
-    // Stream the buffer data into the tar extractor
+    extract.on('error', (error) => {
+      console.error('Error during extraction:', error)
+      reject(error)
+    })
+
     const stream = Readable.from(tarBuffer)
     stream.pipe(extract)
   })
