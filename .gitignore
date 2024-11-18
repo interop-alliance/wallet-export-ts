@@ -114,7 +114,6 @@ dist
 
 # Output
 dist
-out
 
 # MacOS
 .DS_Store
