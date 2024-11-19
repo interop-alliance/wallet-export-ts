@@ -1,5 +1,11 @@
 # wallet-export-ts Changelog
 
+## 0.1.3 - 2024-11-19
+
+### Changed
+- Refactor: improve error handling in `importActorProfile`, 
+  convert following csv to json format and change ActorProfileOptions from type to interface
+
 ## 0.1.2 - 2024-11-12
 
 ### Added
