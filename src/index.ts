@@ -123,34 +123,47 @@ export function exportActorProfile({
   }
 
   if (lists) {
-    manifest.contents.activitypub.contents['lists.csv'] = {
+    manifest.contents.activitypub.contents['lists.json'] = {
       url: 'https://docs.joinmastodon.org/user/moving/#export'
     }
-    pack.entry({ name: 'activitypub/lists.csv' }, lists)
+    pack.entry(
+      { name: 'activitypub/lists.json' },
+      JSON.stringify(lists, null, 2)
+    )
   }
 
   if (blockedAccounts) {
-    manifest.contents.activitypub.contents['blocked_accounts.csv'] = {
+    manifest.contents.activitypub.contents['blocked_accounts.json'] = {
       url: 'https://docs.joinmastodon.org/user/moving/#export'
     }
-    pack.entry({ name: 'activitypub/blocked_accounts.csv' }, blockedAccounts)
+    pack.entry(
+      { name: 'activitypub/blocked_accounts.json' },
+      JSON.stringify(blockedAccounts, null, 2)
+    )
   }
 
   if (blockedDomains) {
-    manifest.contents.activitypub.contents['blocked_domains.csv'] = {
+    manifest.contents.activitypub.contents['blocked_domains.json'] = {
       url: 'https://docs.joinmastodon.org/user/moving/#export'
     }
-    pack.entry({ name: 'activitypub/blocked_domains.csv' }, blockedDomains)
+    pack.entry(
+      { name: 'activitypub/blocked_domains.csv' },
+      JSON.stringify(blockedDomains, null, 2)
+    )
   }
 
   if (mutedAccounts) {
-    manifest.contents.activitypub.contents['muted_accounts.csv'] = {
+    manifest.contents.activitypub.contents['muted_accounts.json'] = {
       url: 'https://docs.joinmastodon.org/user/moving/#export'
     }
-    pack.entry({ name: 'activitypub/muted_accounts.csv' }, mutedAccounts)
+    pack.entry(
+      { name: 'activitypub/muted_accounts.json' },
+      JSON.stringify(mutedAccounts, null, 2)
+    )
   }
 
   pack.entry({ name: 'manifest.yaml' }, YAML.stringify(manifest))
+  pack.finalize()
 
   return pack
 }
