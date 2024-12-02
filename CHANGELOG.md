@@ -1,5 +1,10 @@
 # wallet-export-ts Changelog
 
+## 0.1.4 - 2024-12-02
+
+### Changed
+- Use json instead csv in importActorProfile, add type definitions.
+
 ## 0.1.3 - 2024-11-19
 
 ### Changed
