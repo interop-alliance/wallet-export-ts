@@ -5,19 +5,7 @@ import * as tar from 'tar-stream'
 import { type Pack } from 'tar-stream'
 import YAML from 'yaml'
 import { Readable } from 'stream'
-
-export interface ActorProfileOptions {
-  actorProfile?: any
-  outbox?: any
-  followers?: any
-  followingAccounts?: any
-  lists?: any
-  bookmarks?: any
-  likes?: any
-  blockedAccounts?: any
-  blockedDomains?: any
-  mutedAccounts?: any
-}
+import { ActorProfileOptions } from './index.d'
 
 export function exportActorProfile({
   actorProfile,
