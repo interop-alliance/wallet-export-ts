@@ -10,7 +10,7 @@ describe('exportActorProfile', () => {
   it('calls function', async () => {
     const filename = 'out/test-export-2024-01-01.tar'
     const tarball = fs.createWriteStream(filename)
-    const packStream = exportActorProfile({ actorProfile, outbox })
+    const packStream = await exportActorProfile({ actorProfile, outbox })
 
     packStream.pipe(tarball)
   })
