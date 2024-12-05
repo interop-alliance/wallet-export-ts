@@ -7,7 +7,28 @@ import YAML from 'yaml'
 import { Readable } from 'stream'
 import { ActorProfileOptions } from './index.d'
 
-export function exportActorProfile({
+const downloadMedia = async (mediaUrl: string) => {
+  if (!mediaUrl) {
+    return null
+  }
+
+  try {
+    const response = await fetch(mediaUrl)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch media: ${response.statusText}`)
+    }
+
+    return {
+      buffer: await response.arrayBuffer(),
+      contentType: response.headers.get('Content-Type')
+    } // Binary data
+  } catch (error) {
+    console.error(`Error downloading media from ${mediaUrl}:`, error)
+    return null
+  }
+}
+
+export async function exportActorProfile({
   actorProfile,
   outbox,
   followers,
@@ -18,16 +39,14 @@ export function exportActorProfile({
   blockedAccounts,
   blockedDomains,
   mutedAccounts
-}: ActorProfileOptions): tar.Pack {
-  const pack: Pack = tar.pack() // pack is a stream
+}: ActorProfileOptions & { media?: File[] }): Promise<tar.Pack> {
+  const pack: Pack = tar.pack()
 
   const manifest: any = {
-    // Universal Backup Container spec version
     'ubc-version': '0.1',
     meta: {
       createdBy: {
         client: {
-          // URL to the client that generated this export file
           url: 'https://github.com/interop-alliance/wallet-export-ts'
         }
       }
@@ -36,17 +55,19 @@ export function exportActorProfile({
       'manifest.yml': {
         url: 'https://w3id.org/fep/6fcd#manifest-file'
       },
-      // Directory with ActivityPub-relevant exports
       activitypub: {
+        contents: {}
+      },
+      media: {
         contents: {}
       }
     }
   }
 
   pack.entry({ name: 'activitypub', type: 'directory' })
+  pack.entry({ name: 'media', type: 'directory' })
 
   if (actorProfile) {
-    // Serialized ActivityPub Actor profile
     manifest.contents.activitypub.contents['actor.json'] = {
       url: 'https://www.w3.org/TR/activitypub/#actor-objects'
     }
@@ -57,7 +78,6 @@ export function exportActorProfile({
   }
 
   if (outbox) {
-    // ActivityStreams OrderedCollection representing the contents of the actor's Outbox
     manifest.contents.activitypub.contents['outbox.json'] = {
       url: 'https://www.w3.org/TR/activitystreams-core/#collections'
     }
@@ -68,7 +88,6 @@ export function exportActorProfile({
   }
 
   if (followers) {
-    // ActivityStreams OrderedCollection representing the actor's Followers
     manifest.contents.activitypub.contents['followers.json'] = {
       url: 'https://www.w3.org/TR/activitystreams-core/#collections'
     }
@@ -79,7 +98,6 @@ export function exportActorProfile({
   }
 
   if (likes) {
-    // ActivityStreams OrderedCollection representing Activities and Objects the actor liked
     manifest.contents.activitypub.contents['likes.json'] = {
       url: 'https://www.w3.org/TR/activitystreams-core/#collections'
     }
@@ -90,7 +108,6 @@ export function exportActorProfile({
   }
 
   if (bookmarks) {
-    // ActivityStreams OrderedCollection representing the actor's Bookmarks
     manifest.contents.activitypub.contents['bookmarks.json'] = {
       url: 'https://www.w3.org/TR/activitystreams-core/#collections'
     }
@@ -148,6 +165,46 @@ export function exportActorProfile({
       { name: 'activitypub/muted_accounts.json' },
       JSON.stringify(mutedAccounts, null, 2)
     )
+  }
+
+  if (outbox) {
+    for (const post of outbox) {
+      if (!post.media_attachments) continue
+
+      for (const media of post.media_attachments) {
+        try {
+          const mediaData = await downloadMedia(media.url)
+          if (!mediaData) {
+            console.warn(`Skipping media due to download failure: ${media.url}`)
+            continue
+          }
+
+          const extension = mediaData.contentType?.split('/')[1]
+
+          const mediaName = `${media.id}.${extension}`
+          const mediaType = media.type
+
+          pack.entry(
+            {
+              name: `media/${mediaName}`,
+              size: mediaData.buffer.byteLength
+            },
+            Buffer.from(mediaData.buffer)
+          )
+
+          // Step 6: Add metadata to manifest
+          manifest.contents.media.contents[mediaName] = {
+            type: mediaType,
+            size: mediaData.buffer.byteLength,
+            lastModified: new Date().toISOString(),
+            meta: media.meta || {},
+            description: media.description || null
+          }
+        } catch (error) {
+          console.error(`Failed to process media: ${media.url}`, error)
+        }
+      }
+    }
   }
 
   pack.entry({ name: 'manifest.yaml' }, YAML.stringify(manifest))
