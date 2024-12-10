@@ -5,9 +5,21 @@ import * as tar from 'tar-stream'
 import { type Pack } from 'tar-stream'
 import YAML from 'yaml'
 import { Readable } from 'stream'
-import { ActorProfileOptions } from './index.d'
 
-export function exportActorProfile({
+export interface ActorProfileOptions {
+  actorProfile?: any
+  outbox?: any
+  followers?: any
+  followingAccounts?: any
+  lists?: any
+  bookmarks?: any
+  likes?: any
+  blockedAccounts?: any
+  blockedDomains?: any
+  mutedAccounts?: any
+}
+
+export async function exportActorProfile({
   actorProfile,
   outbox,
   followers,
@@ -18,16 +30,21 @@ export function exportActorProfile({
   blockedAccounts,
   blockedDomains,
   mutedAccounts
-}: ActorProfileOptions): tar.Pack {
-  const pack: Pack = tar.pack() // pack is a stream
+}: ActorProfileOptions & { media?: File[] }): Promise<{
+  addMediaFile: (
+    fileName: string,
+    buffer: ArrayBuffer,
+    contentType: string
+  ) => void
+  finalize: () => tar.Pack
+}> {
+  const pack: Pack = tar.pack()
 
   const manifest: any = {
-    // Universal Backup Container spec version
     'ubc-version': '0.1',
     meta: {
       createdBy: {
         client: {
-          // URL to the client that generated this export file
           url: 'https://github.com/interop-alliance/wallet-export-ts'
         }
       }
@@ -36,17 +53,19 @@ export function exportActorProfile({
       'manifest.yml': {
         url: 'https://w3id.org/fep/6fcd#manifest-file'
       },
-      // Directory with ActivityPub-relevant exports
       activitypub: {
+        contents: {}
+      },
+      media: {
         contents: {}
       }
     }
   }
 
   pack.entry({ name: 'activitypub', type: 'directory' })
+  pack.entry({ name: 'media', type: 'directory' })
 
   if (actorProfile) {
-    // Serialized ActivityPub Actor profile
     manifest.contents.activitypub.contents['actor.json'] = {
       url: 'https://www.w3.org/TR/activitypub/#actor-objects'
     }
@@ -57,7 +76,6 @@ export function exportActorProfile({
   }
 
   if (outbox) {
-    // ActivityStreams OrderedCollection representing the contents of the actor's Outbox
     manifest.contents.activitypub.contents['outbox.json'] = {
       url: 'https://www.w3.org/TR/activitystreams-core/#collections'
     }
@@ -68,7 +86,6 @@ export function exportActorProfile({
   }
 
   if (followers) {
-    // ActivityStreams OrderedCollection representing the actor's Followers
     manifest.contents.activitypub.contents['followers.json'] = {
       url: 'https://www.w3.org/TR/activitystreams-core/#collections'
     }
@@ -79,7 +96,6 @@ export function exportActorProfile({
   }
 
   if (likes) {
-    // ActivityStreams OrderedCollection representing Activities and Objects the actor liked
     manifest.contents.activitypub.contents['likes.json'] = {
       url: 'https://www.w3.org/TR/activitystreams-core/#collections'
     }
@@ -90,7 +106,6 @@ export function exportActorProfile({
   }
 
   if (bookmarks) {
-    // ActivityStreams OrderedCollection representing the actor's Bookmarks
     manifest.contents.activitypub.contents['bookmarks.json'] = {
       url: 'https://www.w3.org/TR/activitystreams-core/#collections'
     }
@@ -150,10 +165,30 @@ export function exportActorProfile({
     )
   }
 
-  pack.entry({ name: 'manifest.yaml' }, YAML.stringify(manifest))
-  pack.finalize()
+  return {
+    addMediaFile(fileName: string, buffer: ArrayBuffer, contentType: string) {
+      pack.entry(
+        {
+          name: `media/${fileName}`,
+          size: buffer.byteLength
+        },
+        Buffer.from(buffer)
+      )
 
-  return pack
+      // Add media metadata to the manifest
+      manifest.contents.media.contents[fileName] = {
+        type: contentType,
+        size: buffer.byteLength,
+        lastModified: new Date().toISOString()
+      }
+    },
+
+    finalize() {
+      pack.entry({ name: 'manifest.yaml' }, YAML.stringify(manifest))
+      pack.finalize()
+      return pack
+    }
+  }
 }
 
 export async function importActorProfile(tarBuffer: Buffer): Promise<any> {
