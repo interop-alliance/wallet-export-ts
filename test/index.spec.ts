@@ -10,9 +10,25 @@ describe('exportActorProfile', () => {
   it('calls function', async () => {
     const filename = 'out/test-export-2024-01-01.tar'
     const tarball = fs.createWriteStream(filename)
-    const packStream = await exportActorProfile({ actorProfile, outbox })
 
+    // Mock inputs for actor profile and outbox
+    const actorProfile = { id: 'test-actor', type: 'Person' }
+    const outbox = [{ id: 'post1', type: 'Note', content: 'Test content' }]
+
+    // Initialize export stream
+    const { finalize } = await exportActorProfile({ actorProfile, outbox })
+
+    // Finalize the tarball
+    const packStream = finalize()
+
+    // Pipe the tarball to the file
     packStream.pipe(tarball)
+
+    // Ensure the tarball finishes writing
+    await new Promise((resolve, reject) => {
+      tarball.on('finish', resolve)
+      tarball.on('error', reject)
+    })
   })
 })
 

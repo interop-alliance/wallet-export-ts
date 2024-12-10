@@ -5,27 +5,18 @@ import * as tar from 'tar-stream'
 import { type Pack } from 'tar-stream'
 import YAML from 'yaml'
 import { Readable } from 'stream'
-import { ActorProfileOptions } from './index.d'
 
-const downloadMedia = async (mediaUrl: string) => {
-  if (!mediaUrl) {
-    return null
-  }
-
-  try {
-    const response = await fetch(mediaUrl)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch media: ${response.statusText}`)
-    }
-
-    return {
-      buffer: await response.arrayBuffer(),
-      contentType: response.headers.get('Content-Type')
-    } // Binary data
-  } catch (error) {
-    console.error(`Error downloading media from ${mediaUrl}:`, error)
-    return null
-  }
+export interface ActorProfileOptions {
+  actorProfile?: any
+  outbox?: any
+  followers?: any
+  followingAccounts?: any
+  lists?: any
+  bookmarks?: any
+  likes?: any
+  blockedAccounts?: any
+  blockedDomains?: any
+  mutedAccounts?: any
 }
 
 export async function exportActorProfile({
@@ -39,7 +30,14 @@ export async function exportActorProfile({
   blockedAccounts,
   blockedDomains,
   mutedAccounts
-}: ActorProfileOptions & { media?: File[] }): Promise<tar.Pack> {
+}: ActorProfileOptions & { media?: File[] }): Promise<{
+  addMediaFile: (
+    fileName: string,
+    buffer: ArrayBuffer,
+    contentType: string
+  ) => void
+  finalize: () => tar.Pack
+}> {
   const pack: Pack = tar.pack()
 
   const manifest: any = {
@@ -167,50 +165,30 @@ export async function exportActorProfile({
     )
   }
 
-  if (outbox) {
-    for (const post of outbox) {
-      if (!post.media_attachments) continue
+  return {
+    addMediaFile(fileName: string, buffer: ArrayBuffer, contentType: string) {
+      pack.entry(
+        {
+          name: `media/${fileName}`,
+          size: buffer.byteLength
+        },
+        Buffer.from(buffer)
+      )
 
-      for (const media of post.media_attachments) {
-        try {
-          const mediaData = await downloadMedia(media.url)
-          if (!mediaData) {
-            console.warn(`Skipping media due to download failure: ${media.url}`)
-            continue
-          }
-
-          const extension = mediaData.contentType?.split('/')[1]
-
-          const mediaName = `${media.id}.${extension}`
-          const mediaType = media.type
-
-          pack.entry(
-            {
-              name: `media/${mediaName}`,
-              size: mediaData.buffer.byteLength
-            },
-            Buffer.from(mediaData.buffer)
-          )
-
-          // Step 6: Add metadata to manifest
-          manifest.contents.media.contents[mediaName] = {
-            type: mediaType,
-            size: mediaData.buffer.byteLength,
-            lastModified: new Date().toISOString(),
-            meta: media.meta || {},
-            description: media.description || null
-          }
-        } catch (error) {
-          console.error(`Failed to process media: ${media.url}`, error)
-        }
+      // Add media metadata to the manifest
+      manifest.contents.media.contents[fileName] = {
+        type: contentType,
+        size: buffer.byteLength,
+        lastModified: new Date().toISOString()
       }
+    },
+
+    finalize() {
+      pack.entry({ name: 'manifest.yaml' }, YAML.stringify(manifest))
+      pack.finalize()
+      return pack
     }
   }
-
-  pack.entry({ name: 'manifest.yaml' }, YAML.stringify(manifest))
-  pack.finalize()
-
-  return pack
 }
 
 export async function importActorProfile(tarBuffer: Buffer): Promise<any> {
