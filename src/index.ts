@@ -167,20 +167,7 @@ export async function exportActorProfile({
 
   return {
     addMediaFile(fileName: string, buffer: ArrayBuffer, contentType: string) {
-      pack.entry(
-        {
-          name: `media/${fileName}`,
-          size: buffer.byteLength
-        },
-        Buffer.from(buffer)
-      )
-
-      // Add media metadata to the manifest
-      manifest.contents.media.contents[fileName] = {
-        type: contentType,
-        size: buffer.byteLength,
-        lastModified: new Date().toISOString()
-      }
+      addMediaFile(pack, manifest, fileName, buffer, contentType)
     },
 
     finalize() {
@@ -243,4 +230,27 @@ export async function importActorProfile(tarBuffer: Buffer): Promise<any> {
     const stream = Readable.from(tarBuffer)
     stream.pipe(extract)
   })
+}
+
+function addMediaFile(
+  pack: Pack,
+  manifest: any,
+  fileName: string,
+  buffer: ArrayBuffer,
+  contentType: string
+): void {
+  pack.entry(
+    {
+      name: `media/${fileName}`,
+      size: buffer.byteLength
+    },
+    Buffer.from(buffer)
+  )
+
+  // Add media metadata to the manifest
+  manifest.contents.media.contents[fileName] = {
+    type: contentType,
+    size: buffer.byteLength,
+    lastModified: new Date().toISOString()
+  }
 }
