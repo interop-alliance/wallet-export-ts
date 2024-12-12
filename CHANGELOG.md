@@ -1,5 +1,10 @@
 # wallet-export-ts Changelog
 
+## 0.1.5 - 2024-12-12
+
+### Added
+- Add the ability to `addMediaFile` to the account export stream.
+
 ## 0.1.4 - 2024-12-02
 
 ### Changed
