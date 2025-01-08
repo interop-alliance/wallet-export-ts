@@ -35,13 +35,15 @@ describe('exportActorProfile', () => {
 describe('importActorProfile', () => {
   it('extracts and verifies contents from account2.tar', async () => {
     // Load the tar file as a buffer
-    const tarBuffer = fs.readFileSync('test/fixtures/account2.tar')
+    const tarBuffer = fs.readFileSync(
+      'test/fixtures/tarball-samples/valid-export.tar'
+    )
 
     // Use the importActorProfile function to parse the tar contents
     const importedData = await importActorProfile(tarBuffer)
 
     // Log or inspect the imported data structure
-    console.log('Imported Data:', importedData)
+    // console.log('Imported Data:', importedData)
 
     // Example assertions to check specific files and content
     expect(importedData).to.have.property('activitypub/actor.json')
