@@ -254,3 +254,5 @@ function addMediaFile(
     lastModified: new Date().toISOString()
   }
 }
+
+export * from './verify.js'
