@@ -4,7 +4,7 @@
 import * as tar from 'tar-stream'
 import { type Pack } from 'tar-stream'
 import YAML from 'yaml'
-import { Readable } from 'stream'
+import { type Readable } from 'stream'
 
 export interface ActorProfileOptions {
   actorProfile?: any
@@ -178,14 +178,21 @@ export async function exportActorProfile({
   }
 }
 
-export async function importActorProfile(tarBuffer: Buffer): Promise<any> {
+/**
+ * Imports an ActivityPub profile from a .tar archive stream.
+ * @param tarStream - A ReadableStream containing the .tar archive.
+ * @returns A promise that resolves to the parsed profile data.
+ */
+export async function importActorProfile(
+  tarStream: Readable
+): Promise<Record<string, any>> {
   const extract = tar.extract()
   const result: Record<string, any> = {}
 
   return await new Promise((resolve, reject) => {
     extract.on('entry', (header, stream, next) => {
+      const fileName = header.name
       let content = ''
-      console.log(`Extracting file: ${header.name}`)
 
       stream.on('data', (chunk) => {
         content += chunk.toString()
@@ -193,42 +200,34 @@ export async function importActorProfile(tarBuffer: Buffer): Promise<any> {
 
       stream.on('end', () => {
         try {
-          if (header.name.endsWith('.json')) {
-            result[header.name] = JSON.parse(content)
-          } else if (
-            header.name.endsWith('.yaml') ||
-            header.name.endsWith('.yml')
-          ) {
-            result[header.name] = YAML.parse(content)
-          } else if (header.name.endsWith('.csv')) {
-            result[header.name] = content
+          if (fileName.endsWith('.json')) {
+            result[fileName] = JSON.parse(content)
+          } else if (fileName.endsWith('.yaml') || fileName.endsWith('.yml')) {
+            result[fileName] = YAML.parse(content)
+          } else if (fileName.endsWith('.csv')) {
+            result[fileName] = content
           }
-          console.log(`Successfully parsed: ${header.name}`)
-        } catch (error) {
-          console.error(`Error processing file ${header.name}:`, error)
-          reject(error)
+        } catch (error: any) {
+          reject(new Error(`Error processing file ${fileName}: ${error}`))
         }
         next()
       })
 
-      stream.on('error', (error) => {
-        console.error(`Stream error on file ${header.name}:`, error)
-        reject(error)
+      stream.on('error', (error: any) => {
+        reject(new Error(`Stream error on file ${fileName}: ${error}`))
       })
     })
 
     extract.on('finish', () => {
-      console.log('Extraction complete', result)
       resolve(result)
     })
 
     extract.on('error', (error) => {
-      console.error('Error during extraction:', error)
-      reject(error)
+      reject(new Error(`Error during extraction: ${error}`))
     })
 
-    const stream = Readable.from(tarBuffer)
-    stream.pipe(extract)
+    // Pipe the ReadableStream into the extractor
+    tarStream.pipe(extract)
   })
 }
 
@@ -255,4 +254,4 @@ function addMediaFile(
   }
 }
 
-export * from './verify.js'
+export * from './verify'
