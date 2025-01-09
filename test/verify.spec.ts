@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import { readFileSync } from 'fs'
-import { validateExportStream } from '../src/verify'
+import { validateExportStream } from '../dist'
+import { Readable } from 'stream'
 
 describe('validateExportStream', () => {
   it('should validate a valid tarball', async () => {
@@ -8,7 +9,9 @@ describe('validateExportStream', () => {
     const tarBuffer = readFileSync(
       'test/fixtures/tarball-samples/valid-export.tar'
     )
-    const result = await validateExportStream(tarBuffer)
+    const tarStream = Readable.from(tarBuffer)
+    const result = await validateExportStream(tarStream)
+    console.log('🚀 ~ it ~ valid result:', result)
 
     expect(result.valid).to.be.true
     expect(result.errors).to.be.an('array').that.is.empty
@@ -19,7 +22,9 @@ describe('validateExportStream', () => {
     const tarBuffer = readFileSync(
       'test/fixtures/tarball-samples/missing-manifest.tar'
     )
-    const result = await validateExportStream(tarBuffer)
+    const tarStream = Readable.from(tarBuffer)
+    const result = await validateExportStream(tarStream)
+    console.log('🚀 ~ it ~ miss mani result:', result)
 
     expect(result.valid).to.be.false
   })
@@ -29,48 +34,43 @@ describe('validateExportStream', () => {
     const tarBuffer = readFileSync(
       'test/fixtures/tarball-samples/missing-actor.tar'
     )
-    const result = await validateExportStream(tarBuffer)
+    const tarStream = Readable.from(tarBuffer)
+    const result = await validateExportStream(tarStream)
 
     expect(result.valid).to.be.false
     console.log(JSON.stringify(result.errors))
   })
 
-  // it('should fail if outbox.json is missing', async () => {
-  //   // Load a tarball with missing outbox.json
-  //   const tarBuffer = readFileSync(
-  //     'test/fixtures/exported-profile-missing-outbox.tar'
-  //   )
-  //   const result = await validateExportStream(tarBuffer)
+  it('should fail if outbox.json is missing', async () => {
+    // Load a tarball with missing outbox.json
+    const tarBuffer = readFileSync(
+      'test/fixtures/tarball-samples/missing-outbox.tar'
+    )
+    const tarStream = Readable.from(tarBuffer)
+    const result = await validateExportStream(tarStream)
 
-  //   expect(result.valid).to.be.false
-  //   expect(result.errors).to.include(
-  //     'Missing required file: activitypub/outbox.json'
-  //   )
-  // })
+    expect(result.valid).to.be.false
+  })
 
-  // it('should fail if actor.json contains invalid JSON', async () => {
-  //   // Load a tarball with invalid JSON in actor.json
-  //   const tarBuffer = readFileSync(
-  //     'test/fixtures/exported-profile-invalid-actor-json.tar'
-  //   )
-  //   const result = await validateExportStream(tarBuffer)
+  it('should fail if actor.json contains invalid JSON', async () => {
+    // Load a tarball with invalid JSON in actor.json
+    const tarBuffer = readFileSync(
+      'test/fixtures/tarball-samples/invalid-actor.tar'
+    )
+    const tarStream = Readable.from(tarBuffer)
+    const result = await validateExportStream(tarStream)
 
-  //   expect(result.valid).to.be.false
-  //   expect(result.errors).to.include(
-  //     'Error processing file activitypub/actor.json: Unexpected token } in JSON at position 42'
-  //   )
-  // })
+    expect(result.valid).to.be.false
+  })
 
-  // it('should fail if manifest.yaml is invalid', async () => {
-  //   // Load a tarball with invalid manifest.yaml
-  //   const tarBuffer = readFileSync(
-  //     'test/fixtures/exported-profile-invalid-manifest.tar'
-  //   )
-  //   const result = await validateExportStream(tarBuffer)
+  it('should fail if manifest.yaml is invalid', async () => {
+    // Load a tarball with invalid manifest.yaml
+    const tarBuffer = readFileSync(
+      'test/fixtures/tarball-samples/invalid-manifest.tar'
+    )
+    const tarStream = Readable.from(tarBuffer)
+    const result = await validateExportStream(tarStream)
 
-  //   expect(result.valid).to.be.false
-  //   expect(result.errors).to.include(
-  //     'Manifest is missing required field: ubc-version'
-  //   )
-  // })
+    expect(result.valid).to.be.false
+  })
 })

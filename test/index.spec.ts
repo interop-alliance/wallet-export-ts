@@ -5,6 +5,7 @@ import { exportActorProfile, importActorProfile } from '../src'
 import { outbox } from './fixtures/outbox'
 import { actorProfile } from './fixtures/actorProfile'
 import { expect } from 'chai'
+import { Readable } from 'node:stream'
 
 describe('exportActorProfile', () => {
   it('calls function', async () => {
@@ -40,7 +41,8 @@ describe('importActorProfile', () => {
     )
 
     // Use the importActorProfile function to parse the tar contents
-    const importedData = await importActorProfile(tarBuffer)
+    const tarStream = Readable.from(tarBuffer)
+    const importedData = await importActorProfile(tarStream)
 
     // Log or inspect the imported data structure
     // console.log('Imported Data:', importedData)
