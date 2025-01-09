@@ -11,7 +11,6 @@ export async function validateExportStream(
   tarStream: Readable
 ): Promise<{ valid: boolean; errors: string[] }> {
   console.log('Validating export stream...')
-  console.log('length of tarStream: ', tarStream)
   const extract = tar.extract()
   const errors: string[] = []
   const requiredFiles = [
@@ -24,7 +23,6 @@ export async function validateExportStream(
   return await new Promise((resolve) => {
     extract.on('entry', (header, stream, next) => {
       const fileName = header.name.toLowerCase() // Normalize file name
-      console.log(`Processing file: ${fileName}`) // Log the file name
       foundFiles.add(fileName)
 
       let content = ''
@@ -64,9 +62,6 @@ export async function validateExportStream(
     })
 
     extract.on('finish', () => {
-      console.log('Found files:', Array.from(foundFiles)) // Debug log
-      console.log('Required files:', requiredFiles) // Debug log
-
       // Check if all required files are present
       for (const file of requiredFiles) {
         if (!foundFiles.has(file)) {
