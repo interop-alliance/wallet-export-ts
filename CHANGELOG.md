@@ -1,5 +1,13 @@
 # wallet-export-ts Changelog
 
+## 0.1.6 - 2025-01-15
+
+### Added
+- Add validation for exported ActivityPub tarballs
+
+### Changed
+- Refactor `validateExportStream` to accept `ReadableStream` and improve file validation logic.
+
 ## 0.1.5 - 2024-12-12
 
 ### Added
