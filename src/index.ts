@@ -5,6 +5,7 @@ import * as tar from 'tar-stream'
 import { type Pack } from 'tar-stream'
 import YAML from 'yaml'
 import { type Readable } from 'stream'
+import path from 'path'
 
 export interface ActorProfileOptions {
   actorProfile?: any
@@ -186,12 +187,26 @@ export async function exportActorProfile({
 export async function importActorProfile(
   tarStream: Readable
 ): Promise<Record<string, any>> {
+  console.log('🚀 Starting to process tar stream...')
   const extract = tar.extract()
   const result: Record<string, any> = {}
 
   return await new Promise((resolve, reject) => {
     extract.on('entry', (header, stream, next) => {
-      const fileName = header.name
+      // Normalize fileName to include only `activitypub/filename`
+      const originalFileName = header.name
+      const fileName = `activitypub/${path.basename(originalFileName)}`
+
+      // Skip system-generated files
+      if (
+        fileName.startsWith('activitypub/._') ||
+        fileName.endsWith('.DS_Store')
+      ) {
+        console.warn(`Skipping system-generated file: ${fileName}`)
+        next()
+      }
+
+      console.log(`Processing file: ${fileName}`)
       let content = ''
 
       stream.on('data', (chunk) => {
@@ -202,31 +217,42 @@ export async function importActorProfile(
         try {
           if (fileName.endsWith('.json')) {
             result[fileName] = JSON.parse(content)
+            console.log('Parsed JSON file successfully:', fileName)
           } else if (fileName.endsWith('.yaml') || fileName.endsWith('.yml')) {
             result[fileName] = YAML.parse(content)
           } else if (fileName.endsWith('.csv')) {
             result[fileName] = content
+          } else {
+            console.warn(`Unsupported file type: ${fileName}, skipping...`)
           }
         } catch (error: any) {
-          reject(new Error(`Error processing file ${fileName}: ${error}`))
+          console.error(`Error processing file ${fileName}:`, error.message)
+        } finally {
+          next() // Always continue
         }
-        next()
       })
 
       stream.on('error', (error: any) => {
-        reject(new Error(`Stream error on file ${fileName}: ${error}`))
+        console.error(`Stream error on file ${fileName}:`, error.message)
+        next() // Continue even on stream error
       })
     })
 
     extract.on('finish', () => {
+      console.log('All files processed successfully.')
       resolve(result)
     })
 
     extract.on('error', (error) => {
-      reject(new Error(`Error during extraction: ${error}`))
+      console.error('Error during tar extraction:', error.message)
+      reject(new Error('Failed to extract tar file.'))
     })
 
-    // Pipe the ReadableStream into the extractor
+    tarStream.on('error', (error) => {
+      console.error('Error in tar stream:', error.message)
+      reject(new Error('Failed to process tar stream.'))
+    })
+
     tarStream.pipe(extract)
   })
 }
