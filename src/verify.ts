@@ -25,7 +25,6 @@ export async function validateExportStream(
     extract.on('entry', (header, stream, next) => {
       const originalFileName = header.name
       const basename = path.basename(originalFileName)
-      console?.log('🚀 ~ extract.on ~ basename:', basename)
       const fileName =
         basename === 'manifest.yaml'
           ? 'manifest.yaml'
