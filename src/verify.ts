@@ -1,6 +1,7 @@
 import * as tar from 'tar-stream'
 import { type Readable } from 'stream'
 import YAML from 'yaml'
+import path from 'path'
 
 /**
  * Validates the structure and content of an exported ActivityPub tarball.
@@ -22,7 +23,20 @@ export async function validateExportStream(
 
   return await new Promise((resolve) => {
     extract.on('entry', (header, stream, next) => {
-      const fileName = header.name.toLowerCase() // Normalize file name
+      const originalFileName = header.name
+      const basename = path.basename(originalFileName)
+      console?.log('🚀 ~ extract.on ~ basename:', basename)
+      const fileName =
+        basename === 'manifest.yaml'
+          ? 'manifest.yaml'
+          : `activitypub/${basename}`
+
+      // Skip system-generated files
+      if (basename.startsWith('.')) {
+        console?.warn(`Skipping system-generated file: ${fileName}`)
+        next()
+        return
+      }
       foundFiles.add(fileName)
 
       let content = ''
