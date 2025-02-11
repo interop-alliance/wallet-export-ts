@@ -192,7 +192,7 @@ export async function importActorProfile(
     onError?: (error: Error, context: { fileName?: string }) => void
   } = {}
 ): Promise<Record<string, any>> {
-  const { console = undefined, onError = undefined } = options
+  const { console = undefined } = options
   const extract = tar.extract()
   const result: Record<string, any> = {}
 
@@ -242,13 +242,8 @@ export async function importActorProfile(
       })
 
       stream.on('error', (error: any) => {
-        const errorMessage = `Stream error on file ${fileName}: ${error.message}`
-        if (onError) {
-          onError(new Error(errorMessage), { fileName })
-        } else {
-          reject(new Error(errorMessage))
-        }
-        next() // Continue even on stream error
+        console?.error(`Stream error on file ${fileName}:`, error.message)
+        next(error) // Continue even on stream error
       })
     })
 
@@ -258,21 +253,13 @@ export async function importActorProfile(
     })
 
     extract.on('error', (error) => {
-      const errorMessage = `Error during tar extraction: ${error.message}`
-      if (onError) {
-        onError(new Error(errorMessage), {})
-      } else {
-        reject(new Error(errorMessage))
-      }
+      console?.error('Error during tar extraction:', error.message)
+      reject(new Error('Failed to extract tar file.'))
     })
 
     tarStream.on('error', (error) => {
-      const errorMessage = `Error in tar stream: ${error.message}`
-      if (onError) {
-        onError(new Error(errorMessage), {})
-      } else {
-        reject(new Error(errorMessage))
-      }
+      console?.error('Error in tar stream:', error.message)
+      reject(new Error('Failed to process tar stream.'))
     })
 
     tarStream.pipe(extract)
