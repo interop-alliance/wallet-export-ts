@@ -112,8 +112,5 @@ dist
 *.sw[nop]
 /.vscode
 
-# Output
-dist
-
 # MacOS
 .DS_Store
