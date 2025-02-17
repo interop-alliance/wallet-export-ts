@@ -230,12 +230,7 @@ export async function importActorProfile(
             console?.warn(`Unsupported file type: ${fileName}, skipping...`)
           }
         } catch (error: any) {
-          const errorMessage = `Error processing file ${fileName}: ${error.message}`
-          if (onError) {
-            onError(new Error(errorMessage), { fileName })
-          } else {
-            reject(new Error(errorMessage))
-          }
+          next(error)
         } finally {
           next() // Always continue
         }
