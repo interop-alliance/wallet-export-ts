@@ -24,8 +24,14 @@ export declare function exportActorProfile({ actorProfile, outbox, followers, fo
 /**
  * Imports an ActivityPub profile from a .tar archive stream.
  * @param tarStream - A ReadableStream containing the .tar archive.
+ * @param options - Options for the import process.
  * @returns A promise that resolves to the parsed profile data.
  */
-export declare function importActorProfile(tarStream: Readable): Promise<Record<string, any>>;
+export declare function importActorProfile(tarStream: Readable, options?: {
+    console?: Pick<Console, 'log' | 'warn' | 'error'>;
+    onError?: (error: Error, context: {
+        fileName?: string;
+    }) => void;
+}): Promise<Record<string, any>>;
 export * from './verify';
 //# sourceMappingURL=index.d.ts.map

@@ -2,9 +2,12 @@
   "name": "@interop/wallet-export-ts",
   "description": "A Javascript/Typescript library for exporting Universal Wallet Backup Containers.",
   "version": "0.1.6",
+  "bin": {
+    "wallet-export": "./dist/cli.js"
+  },
   "scripts": {
     "build": "npm run clear && tsc -p tsconfig.json && ./build-dist.sh",
-    "clear": "rimraf dist/*",
+    "clear": "npx rimraf dist/*",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "prepare": "npm run build",
@@ -63,7 +66,7 @@
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
     "prettier": "^3.1.0",
-    "rimraf": "^5.0.5",
+    "rimraf": "^5.0.10",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   },
