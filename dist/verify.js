@@ -39,6 +39,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateExportStream = validateExportStream;
 const tar = __importStar(require("tar-stream"));
 const yaml_1 = __importDefault(require("yaml"));
+const path_1 = __importDefault(require("path"));
 /**
  * Validates the structure and content of an exported ActivityPub tarball.
  * @param tarStream - A ReadableStream containing the .tar archive.
@@ -56,7 +57,17 @@ async function validateExportStream(tarStream) {
     const foundFiles = new Set();
     return await new Promise((resolve) => {
         extract.on('entry', (header, stream, next) => {
-            const fileName = header.name.toLowerCase(); // Normalize file name
+            const originalFileName = header.name;
+            const basename = path_1.default.basename(originalFileName);
+            const fileName = basename === 'manifest.yaml'
+                ? 'manifest.yaml'
+                : `activitypub/${basename}`;
+            // Skip system-generated files
+            if (basename.startsWith('.')) {
+                console?.warn(`Skipping system-generated file: ${fileName}`);
+                next();
+                return;
+            }
             foundFiles.add(fileName);
             let content = '';
             stream.on('data', (chunk) => {

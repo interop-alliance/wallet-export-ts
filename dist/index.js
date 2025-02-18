@@ -146,24 +146,26 @@ async function exportActorProfile({ actorProfile, outbox, followers, followingAc
 /**
  * Imports an ActivityPub profile from a .tar archive stream.
  * @param tarStream - A ReadableStream containing the .tar archive.
+ * @param options - Options for the import process.
  * @returns A promise that resolves to the parsed profile data.
  */
-async function importActorProfile(tarStream) {
-    console.log('🚀 Starting to process tar stream...');
+async function importActorProfile(tarStream, options = {}) {
+    const { console = undefined } = options;
     const extract = tar.extract();
     const result = {};
     return await new Promise((resolve, reject) => {
         extract.on('entry', (header, stream, next) => {
-            // Normalize fileName to include only `activitypub/filename`
             const originalFileName = header.name;
-            const fileName = `activitypub/${path_1.default.basename(originalFileName)}`;
+            const basename = path_1.default.basename(originalFileName);
+            console?.log('🚀 ~ extract.on ~ basename:', basename);
+            const fileName = `activitypub/${basename}`;
             // Skip system-generated files
-            if (fileName.startsWith('activitypub/._') ||
-                fileName.endsWith('.DS_Store')) {
-                console.warn(`Skipping system-generated file: ${fileName}`);
+            if (basename.startsWith('.')) {
+                console?.warn(`Skipping system-generated file: ${fileName}`);
                 next();
+                return;
             }
-            console.log(`Processing file: ${fileName}`);
+            console?.log(`Processing file: ${fileName}`);
             let content = '';
             stream.on('data', (chunk) => {
                 content += chunk.toString();
@@ -172,7 +174,7 @@ async function importActorProfile(tarStream) {
                 try {
                     if (fileName.endsWith('.json')) {
                         result[fileName] = JSON.parse(content);
-                        console.log('Parsed JSON file successfully:', fileName);
+                        console?.log('Parsed JSON file successfully:', fileName);
                     }
                     else if (fileName.endsWith('.yaml') || fileName.endsWith('.yml')) {
                         result[fileName] = yaml_1.default.parse(content);
@@ -181,31 +183,31 @@ async function importActorProfile(tarStream) {
                         result[fileName] = content;
                     }
                     else {
-                        console.warn(`Unsupported file type: ${fileName}, skipping...`);
+                        console?.warn(`Unsupported file type: ${fileName}, skipping...`);
                     }
                 }
                 catch (error) {
-                    console.error(`Error processing file ${fileName}:`, error.message);
+                    next(error);
                 }
                 finally {
                     next(); // Always continue
                 }
             });
             stream.on('error', (error) => {
-                console.error(`Stream error on file ${fileName}:`, error.message);
-                next(); // Continue even on stream error
+                console?.error(`Stream error on file ${fileName}:`, error.message);
+                next(error); // Continue even on stream error
             });
         });
         extract.on('finish', () => {
-            console.log('All files processed successfully.');
+            console?.log('All files processed successfully.');
             resolve(result);
         });
         extract.on('error', (error) => {
-            console.error('Error during tar extraction:', error.message);
+            console?.error('Error during tar extraction:', error.message);
             reject(new Error('Failed to extract tar file.'));
         });
         tarStream.on('error', (error) => {
-            console.error('Error in tar stream:', error.message);
+            console?.error('Error in tar stream:', error.message);
             reject(new Error('Failed to process tar stream.'));
         });
         tarStream.pipe(extract);
